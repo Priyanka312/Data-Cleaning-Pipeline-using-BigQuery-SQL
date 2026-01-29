@@ -1,0 +1,98 @@
+-- Data cleaning from BigQuery DW
+
+SELECT * FROM `firstbq-485802.first_dataset.customer`
+
+-- 1. Standarize the order_status column
+
+select order_status ,
+case when lower(order_status) like '%deliver%' then 'Delivered'
+     when lower(order_status) like '%pend%' then 'Pending'
+     when lower(order_status) like '%ship%' then 'Shipped'
+     when lower(order_status) like '%return%' then 'Returned'
+     when lower(order_status) like '%refund%' then 'Refunded'
+    ELSE 'Other' 
+    END as cleaned_order_status
+from `firstbq-485802.first_dataset.customer`
+
+
+
+
+
+-- 2. Standarize the product_name column
+
+select product_name ,
+case when lower(product_name) like '%apple watch%' then 'Apple Watch'
+     when lower(product_name) like '%google pixel%' then 'Google Pixel'
+     when lower(product_name) like '%samsung galaxy%' then 'Samsung Galaxy S22'
+     when lower(product_name) like '%iphone%' then 'iPhone 14'
+      when lower(product_name) like '%macbook%' then 'Macbook Pro'
+    ELSE 'Other' 
+    END as cleaned_product_name
+from `firstbq-485802.first_dataset.customer`
+
+
+select distinct quantity from  `firstbq-485802.first_dataset.customer`
+
+
+
+-- 3. Standarize the quantity column
+
+select quantity ,
+case when lower(quantity) like '%two%' then 2
+    ELSE cast(quantity as INT64) 
+    END as cleaned_quanity
+from `firstbq-485802.first_dataset.customer`
+
+-- 4. standarizing Customer Name with capital letter 
+select customer_name,
+initcap(customer_name) as new_customer_name
+from `firstbq-485802.first_dataset.customer`
+where customer_name is not null;
+
+-- 5 remove dumplicates values 
+
+select *
+from (
+select row_number() over(partition by lower(email),lower(product_name) order by order_id) as rn, * 
+from `firstbq-485802.first_dataset.customer`
+)
+where rn=1
+
+-- 6 Final table 
+with cleaned_data as (
+  select order_id,
+  initcap(customer_name) as new_customer_name,
+  email,
+  case when lower(product_name) like '%apple watch%' then 'Apple Watch'
+     when lower(product_name) like '%google pixel%' then 'Google Pixel'
+     when lower(product_name) like '%samsung galaxy%' then 'Samsung Galaxy S22'
+     when lower(product_name) like '%iphone%' then 'iPhone 14'
+      when lower(product_name) like '%macbook%' then 'Macbook Pro'
+    ELSE 'Other' 
+    END as cleaned_product_name,
+    case when lower(quantity) like '%two%' then 2
+    ELSE cast(quantity as INT64) 
+    END as cleaned_quanity,
+    price,
+    initcap(country) as country,
+    case when lower(order_status) like '%deliver%' then 'Delivered'
+     when lower(order_status) like '%pend%' then 'Pending'
+     when lower(order_status) like '%ship%' then 'Shipped'
+     when lower(order_status) like '%return%' then 'Returned'
+     when lower(order_status) like '%refund%' then 'Refunded'
+    ELSE 'Other' END as order_status
+    from 
+  `firstbq-485802.first_dataset.customer`
+  where customer_name is not null
+),
+duplicated_data as (select *, row_number() over(partition by email,cleaned_product_name order by order_id) as rn
+from cleaned_data
+),
+final_table as (
+
+select * from duplicated_data
+where rn=1
+)
+select * from final_table
+
+
