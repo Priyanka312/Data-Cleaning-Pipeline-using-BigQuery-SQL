@@ -203,17 +203,12 @@ WHERE rn = 1;
 ---
 
 ## 🔧 Future Improvements
-
-- Use `SAFE_CAST()` to avoid runtime casting failures  
+ 
 - Persist results as a BigQuery View or Table  
 - Add automated data quality validation checks  
-- Integrate with scheduled ELT pipelines (dbt / Airflow)  
+  
 
----
 
-## 👩‍💻 Author
 
-**Priya — Data Analyst**  
-Skills: BigQuery SQL, Data Cleaning, ETL, BI Reporting, Analytics Engineering
 
----
+
